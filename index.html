@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Banco de Horas</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+body{background:#0f172a;color:#fff;padding:15px}
+.container{max-width:900px;margin:auto;background:#1e293b;padding:20px;border-radius:15px}
+h1{text-align:center;margin-bottom:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+input,button,select{width:100%;padding:10px;border:none;border-radius:8px;margin-top:6px}
+input,select{background:#111827;color:#fff}
+button{background:#22c55e;font-weight:bold}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.actions *{flex:1}
+table{width:100%;margin-top:15px;border-collapse:collapse}
+th,td{padding:8px;text-align:center}
+th{background:#334155}
+tr:nth-child(even){background:#111827}
+.small{font-size:12px;padding:5px}
+.edit{background:orange}
+.del{background:red;color:#fff}
+</style>
+</head>
+
+<body>
+<div id="app"></div>
+
+<script>
+
+// melhora clique no iPhone
+document.addEventListener("touchstart", function(){}, true);
+
+let usuario = localStorage.getItem('usuario');
+let editando = null;
+
+function loginTela(){
+ document.getElementById('app').innerHTML = `
+ <div class="container">
+ <h1>Banco de Horas</h1>
+ <input id="user" placeholder="Seu nome" onkeydown="if(event.key==='Enter') login()">
+ <button onclick="login()">Entrar</button>
+ </div>`;
+}
+
+function login(){
+ let nome = document.getElementById('user').value.trim();
+ if(!nome) return alert('Digite um nome');
+ localStorage.setItem('usuario', nome);
+ location.reload();
+}
+
+function logout(){
+ localStorage.removeItem('usuario');
+ location.reload();
+}
+
+function sistema(){
+ document.getElementById('app').innerHTML = `
+ <div class="container">
+ <h1>Banco de Horas</h1>
+ <p><b>${usuario}</b></p>
+
+ <div class="grid">
+ <input type="date" id="data">
+ <input type="time" id="entrada">
+ <input type="time" id="saidaAlmoco">
+ <input type="time" id="voltaAlmoco">
+ <input type="time" id="saidaFinal" onkeydown="if(event.key==='Enter') salvar()">
+ </div>
+
+ <button onclick="salvar()">Salvar</button>
+
+ <div class="actions">
+ <button onclick="exportar()">Exportar</button>
+ <button onclick="limparTudo()">Limpar</button>
+ <button onclick="logout()">Sair</button>
+ </div>
+
+ <div class="actions">
+ <input id="filtroAno" placeholder="Ano">
+ <select id="filtroMes">
+ <option value="">Mês</option>
+ <option value="01">Jan</option><option value="02">Fev</option>
+ <option value="03">Mar</option><option value="04">Abr</option>
+ <option value="05">Mai</option><option value="06">Jun</option>
+ <option value="07">Jul</option><option value="08">Ago</option>
+ <option value="09">Set</option><option value="10">Out</option>
+ <option value="11">Nov</option><option value="12">Dez</option>
+ </select>
+ <button onclick="carregar()">Filtrar</button>
+ <button onclick="limparFiltro()">Limpar</button>
+ </div>
+
+ <table>
+ <thead><tr><th>Dia</th><th>Data</th><th>Extra</th><th>Ações</th></tr></thead>
+ <tbody id="tb"></tbody>
+ </table>
+
+ <div id="total"></div>
+ </div>`;
+ carregar();
+}
+
+function toMin(t){
+ let p=t.split(':'); return Number(p[0])*60+Number(p[1]);
+}
+
+function fmt(m){
+ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+}
+
+// compatível com iPhone
+function dia(d){
+ let p=d.split('-');
+ let dt=new Date(p[0],p[1]-1,p[2]);
+ return dt.toLocaleDateString('pt-BR',{weekday:'short'});
+}
+
+function salvar(){
+ let d = val('data');
+ let e = val('entrada');
+ let sA = val('saidaAlmoco');
+ let vA = val('voltaAlmoco');
+ let s = val('saidaFinal');
+
+ if(!d||!e||!sA||!vA||!s) return alert('Preencha tudo');
+ if(!(toMin(e)<toMin(sA)&&toMin(sA)<toMin(vA)&&toMin(vA)<toMin(s))) return alert('Erro horário');
+
+ let extra = Math.max(0,480-toMin(e)) + Math.max(0,toMin(s)-1020);
+
+ let lista = get();
+
+ let reg = {data:d,entrada:e,sA:sA,vA:vA,saida:s,extra};
+
+ if(editando!=null){
+   lista[editando]=reg;
+   editando=null;
+ } else {
+   if(lista.find(x=>x.data===d)) return alert('Já existe');
+   lista.push(reg);
+ }
+
+ set(lista);
+ limpar();
+ carregar();
+}
+
+function carregar(){
+ let lista = get().sort((a,b)=>a.data.localeCompare(b.data));
+ let tb = document.getElementById('tb');
+ tb.innerHTML='';
+
+ let ano = val('filtroAno');
+ let mes = val('filtroMes');
+
+ let total=0;
+
+ lista.forEach((i,x)=>{
+ let p=i.data.split('-');
+
+ if(ano && p[0]!=ano) return;
+ if(mes && p[1]!=mes) return;
+
+ total+=i.extra;
+
+ tb.innerHTML+=`
+ <tr>
+ <td>${dia(i.data)}</td>
+ <td>${i.data}</td>
+ <td>${fmt(i.extra)}</td>
+ <td>
+ <button class="small edit" onclick="editar(${x})">E</button>
+ <button class="small del" onclick="excluir(${x})">X</button>
+ </td>
+ </tr>`;
+ });
+
+ document.getElementById('total').innerHTML='Total: '+fmt(total);
+}
+
+function editar(i){
+ let item=get()[i];
+ document.getElementById('data').value=item.data;
+ document.getElementById('entrada').value=item.entrada;
+ document.getElementById('saidaAlmoco').value=item.sA;
+ document.getElementById('voltaAlmoco').value=item.vA;
+ document.getElementById('saidaFinal').value=item.saida;
+ editando=i;
+}
+
+function excluir(i){
+ if(!confirm('Excluir?')) return;
+ let l=get(); l.splice(i,1); set(l); carregar();
+}
+
+function exportar(){
+ let l=get();
+ let csv='Data;Extra\n';
+ l.forEach(i=>csv+=i.data+';'+fmt(i.extra)+'\n');
+ let blob=new Blob([csv]);
+ let a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='horas.csv';
+ a.click();
+}
+
+function limparTudo(){
+ if(confirm('Apagar tudo?')){
+ localStorage.removeItem('horas_'+usuario);
+ carregar();
+ }
+}
+
+function limparFiltro(){
+ document.getElementById('filtroAno').value='';
+ document.getElementById('filtroMes').value='';
+ carregar();
+}
+
+function val(id){
+ let el=document.getElementById(id);
+ return el?el.value:'';
+}
+
+function limpar(){
+ ['data','entrada','saidaAlmoco','voltaAlmoco','saidaFinal']
+ .forEach(i=>document.getElementById(i).value='');
+}
+
+function get(){return JSON.parse(localStorage.getItem('horas_'+usuario))||[]}
+function set(l){localStorage.setItem('horas_'+usuario,JSON.stringify(l))}
+
+if(!usuario) loginTela(); else sistema();
+
+</script>
+</body>
+</html>

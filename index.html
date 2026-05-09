@@ -3,245 +3,705 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 <title>Banco de Horas</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-body{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:24px}
-.container{max-width:980px;margin:auto;background:#111827;border-radius:20px;padding:24px}
-h1{text-align:center;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
-label{font-size:12px;color:#cbd5e1;margin-bottom:4px;display:block}
-input,button,select{width:100%;padding:10px;border:none;border-radius:10px}
-input,select{background:#1e293b;color:white}
-button{cursor:pointer;font-weight:bold}
-.btn-primary{background:#22c55e}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
-.actions *{flex:1}
-table{width:100%;margin-top:16px;border-collapse:collapse}
-th,td{padding:10px;text-align:center}
-th{background:#334155}
-tr:nth-child(even){background:#1e293b}
-.small-btn{padding:6px 8px;font-size:12px}
-.edit{background:#f59e0b}
-.delete{background:#ef4444;color:#fff}
-.card{margin-top:10px}
-</style>
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Arial,sans-serif
+}
 
+body{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:#fff;
+padding:24px
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+background:#111827;
+border-radius:20px;
+padding:24px
+}
+
+h1{
+text-align:center;
+margin-bottom:20px
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:12px;
+margin-bottom:16px
+}
+
+label{
+font-size:12px;
+color:#cbd5e1;
+margin-bottom:4px;
+display:block
+}
+
+input,button,select{
+width:100%;
+padding:10px;
+border:none;
+border-radius:10px
+}
+
+input,select{
+background:#1e293b;
+color:white
+}
+
+button{
+cursor:pointer;
+font-weight:bold
+}
+
+.btn-primary{
+background:#22c55e;
+color:#fff
+}
+
+.actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin:15px 0
+}
+
+.actions *{
+flex:1
+}
+
+table{
+width:100%;
+margin-top:16px;
+border-collapse:collapse
+}
+
+th,td{
+padding:10px;
+text-align:center
+}
+
+th{
+background:#334155
+}
+
+tr:nth-child(even){
+background:#1e293b
+}
+
+.small-btn{
+padding:6px 8px;
+font-size:12px
+}
+
+.edit{
+background:#f59e0b;
+color:#fff
+}
+
+.delete{
+background:#ef4444;
+color:#fff
+}
+
+.card{
+margin-top:10px;
+padding:12px;
+background:#1e293b;
+border-radius:12px
+}
+
+@media(max-width:700px){
+
+table{
+font-size:12px
+}
+
+th,td{
+padding:6px
+}
+
+.actions{
+flex-direction:column
+}
+
+}
+</style>
 </head>
+
 <body>
+
 <div id="app"></div>
 
 <script>
+
 let usuario = localStorage.getItem('usuario');
 let editandoIndex = null;
 
 function loginTela(){
- app.innerHTML=`
- <div class='container'>
-   <h1>Banco de Horas</h1>
-   <input id='user' placeholder='Seu nome' onkeydown="if(event.key==='Enter') login()">
-   <br><br>
-   <button class='btn-primary' onclick='login()'>Entrar</button>
- </div>`;
+
+app.innerHTML=`
+
+<div class='container'>
+
+<h1>Banco de Horas</h1>
+
+<input
+id='user'
+placeholder='Seu nome'
+onkeydown="if(event.key==='Enter') login()">
+
+<br><br>
+
+<button class='btn-primary' onclick='login()'>
+Entrar
+</button>
+
+</div>
+
+`;
+
 }
 
 function login(){
- let nome=document.getElementById('user').value.trim();
- if(!nome)return alert('Digite um nome');
- localStorage.setItem('usuario',nome);
- location.reload();
+
+let nome=document.getElementById('user').value.trim();
+
+if(!nome)
+return alert('Digite um nome');
+
+localStorage.setItem('usuario',nome);
+
+location.reload();
+
 }
 
 function logout(){
- localStorage.removeItem('usuario');
- location.reload();
+
+localStorage.removeItem('usuario');
+
+location.reload();
+
 }
 
 function sistema(){
- app.innerHTML=`
- <div class='container'>
- <h1>Banco de Horas</h1>
- <p>Usuário: <b>${usuario}</b></p>
- <br></br>
- <div class='grid'>
- <div><label>Data</label><input type='date' id='data'></div>
- <div><label>Entrada</label><input type='time' id='entrada'></div>
- <div><label>Saída almoço</label><input type='time' id='saidaAlmoco'></div>
- <div><label>Volta almoço</label><input type='time' id='voltaAlmoco'></div>
- <div><label>Saída final</label><input type='time' id='saidaFinal' onkeydown="if(event.key==='Enter') salvarRegistro()"></div>
- </div>
 
- <button class='btn-primary' onclick='salvarRegistro()'>Salvar Registro</button>
+app.innerHTML=`
 
- <div class='actions'>
- <button onclick='exportar()'>Exportar CSV</button>
- <button onclick='limparTudo()'>Limpar Tudo</button>
- <button onclick='logout()'>Sair</button>
- </div>
+<div class='container'>
 
- <div id='resultado' class='card'></div>
+<h1>Banco de Horas</h1>
 
- <!-- FILTRO -->
- <div class='actions'>
- <input type='number' id='filtroAno' placeholder='Ano'>
- <select id='filtroMes'>
-   <option value=''>Mês</option>
-   <option value='01'>Jan</option>
-   <option value='02'>Fev</option>
-   <option value='03'>Mar</option>
-   <option value='04'>Abr</option>
-   <option value='05'>Mai</option>
-   <option value='06'>Jun</option>
-   <option value='07'>Jul</option>
-   <option value='08'>Ago</option>
-   <option value='09'>Set</option>
-   <option value='10'>Out</option>
-   <option value='11'>Nov</option>
-   <option value='12'>Dez</option>
- </select>
- <button onclick='carregar()'>Filtrar</button>
- <button onclick='limparFiltro()'>Limpar</button>
- </div>
+<p>Usuário: <b>${usuario}</b></p>
 
- <table>
- <thead>
- <tr><th>Dia</th><th>Data</th><th>Trabalhado</th><th>Extra</th><th>Ações</th></tr>
- </thead>
- <tbody id='tabela'></tbody>
- </table>
+<br>
 
- <div id='total' class='card'></div>
+<div class='grid'>
 
- </div>`;
- carregar();
+<div>
+<label>Tipo</label>
+
+<select id='tipoDia' onchange='alternarTipoDia()'>
+<option value='normal'>Dia normal</option>
+<option value='sabado'>Sábado</option>
+</select>
+</div>
+
+<div>
+<label>Data</label>
+<input type='date' id='data'>
+</div>
+
+<div>
+<label>Entrada</label>
+<input type='time' id='entrada'>
+</div>
+
+<div id='campoSaidaAlmoco'>
+<label>Saída almoço</label>
+<input type='time' id='saidaAlmoco'>
+</div>
+
+<div id='campoVoltaAlmoco'>
+<label>Volta almoço</label>
+<input type='time' id='voltaAlmoco'>
+</div>
+
+<div>
+<label>Saída final</label>
+<input
+type='time'
+id='saidaFinal'
+onkeydown="if(event.key==='Enter') salvarRegistro()">
+</div>
+
+</div>
+
+<button class='btn-primary' onclick='salvarRegistro()'>
+Salvar Registro
+</button>
+
+<div class='actions'>
+
+<button onclick='exportar()'>
+Exportar CSV
+</button>
+
+<button onclick='limparTudo()'>
+Limpar Tudo
+</button>
+
+<button onclick='logout()'>
+Sair
+</button>
+
+</div>
+
+<div id='resultado' class='card'></div>
+
+<div class='actions'>
+
+<input
+type='number'
+id='filtroAno'
+placeholder='Ano'>
+
+<select id='filtroMes'>
+
+<option value=''>Mês</option>
+<option value='01'>Jan</option>
+<option value='02'>Fev</option>
+<option value='03'>Mar</option>
+<option value='04'>Abr</option>
+<option value='05'>Mai</option>
+<option value='06'>Jun</option>
+<option value='07'>Jul</option>
+<option value='08'>Ago</option>
+<option value='09'>Set</option>
+<option value='10'>Out</option>
+<option value='11'>Nov</option>
+<option value='12'>Dez</option>
+
+</select>
+
+<button onclick='carregar()'>
+Filtrar
+</button>
+
+<button onclick='limparFiltro()'>
+Limpar
+</button>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Dia</th>
+<th>Data</th>
+<th>Trabalhado</th>
+<th>Extra</th>
+<th>Ações</th>
+</tr>
+
+</thead>
+
+<tbody id='tabela'></tbody>
+
+</table>
+
+<div id='total' class='card'></div>
+
+</div>
+
+`;
+
+carregar();
+
+alternarTipoDia();
+
 }
 
-function toMin(t){let[a,b]=t.split(':').map(Number);return a*60+b}
-function formatar(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
-function diaSemana(data){return new Date(data+'T00:00').toLocaleDateString('pt-BR',{weekday:'short'})}
-function formatarData(data){let[a,b,c]=data.split('-');return `${c}/${b}/${a}`}
+function alternarTipoDia(){
+
+let tipo=document.getElementById('tipoDia').value;
+
+let saida=document.getElementById('campoSaidaAlmoco');
+let volta=document.getElementById('campoVoltaAlmoco');
+
+if(tipo==='sabado'){
+
+saida.style.display='none';
+volta.style.display='none';
+
+}else{
+
+saida.style.display='block';
+volta.style.display='block';
+
+}
+
+}
+
+function toMin(t){
+
+let[a,b]=t.split(':').map(Number);
+
+return a*60+b;
+
+}
+
+function formatar(m){
+
+return String(Math.floor(m/60)).padStart(2,'0')
++
+':'
++
+String(m%60).padStart(2,'0');
+
+}
+
+function diaSemana(data){
+
+return new Date(data+'T00:00')
+.toLocaleDateString('pt-BR',{weekday:'short'});
+
+}
+
+function formatarData(data){
+
+let[a,b,c]=data.split('-');
+
+return `${c}/${b}/${a}`;
+
+}
 
 function salvarRegistro(){
- let data=dataEl('data'), entrada=dataEl('entrada'), sA=dataEl('saidaAlmoco'), vA=dataEl('voltaAlmoco'), saida=dataEl('saidaFinal');
 
- if(!data||!entrada||!sA||!vA||!saida)return alert('Preencha tudo');
- if(!(toMin(entrada)<toMin(sA)&&toMin(sA)<toMin(vA)&&toMin(vA)<toMin(saida))) return alert('Horários inválidos');
+let tipo=document.getElementById('tipoDia').value;
 
- let trab=(toMin(sA)-toMin(entrada))+(toMin(saida)-toMin(vA));
- let extra=Math.max(0,480-toMin(entrada))+Math.max(0,toMin(saida)-1020);
+let data=dataEl('data');
+let entrada=dataEl('entrada');
+let saida=dataEl('saidaFinal');
 
- let lista=getLista();
+let trab=0;
 
- let registro={
-   data,
-   entrada,
-   sAlmoco:sA,
-   vAlmoco:vA,
-   saida,
-   trabalhado:trab,
-   extra
- };
+let registro={};
 
- if(editandoIndex!==null){
-   lista[editandoIndex]=registro;
-   editandoIndex=null;
- } else {
-   if(lista.find(i=>i.data===data)) return alert('Já existe esse dia');
-   lista.push(registro);
- }
+if(tipo==='sabado'){
 
- salvarLista(lista);
+if(!data||!entrada||!saida)
+return alert('Preencha tudo');
 
- document.getElementById('resultado').innerHTML=
- `⏱ ${formatar(trab)} | 🔥 ${formatar(extra)}`;
+if(!(toMin(entrada)<toMin(saida)))
+return alert('Horários inválidos');
 
- limparCampos();
- carregar();
+trab=toMin(saida)-toMin(entrada);
+
+registro={
+
+tipo,
+data,
+entrada,
+saida,
+trabalhado:trab,
+extra:Math.max(0,trab-240)
+
+};
+
+}else{
+
+let sA=dataEl('saidaAlmoco');
+let vA=dataEl('voltaAlmoco');
+
+if(!data||!entrada||!sA||!vA||!saida)
+return alert('Preencha tudo');
+
+if(!(toMin(entrada)<toMin(sA)
+&& toMin(sA)<toMin(vA)
+&& toMin(vA)<toMin(saida)))
+
+return alert('Horários inválidos');
+
+trab=
+(toMin(sA)-toMin(entrada))
++
+(toMin(saida)-toMin(vA));
+
+registro={
+
+tipo,
+data,
+entrada,
+sAlmoco:sA,
+vAlmoco:vA,
+saida,
+trabalhado:trab,
+extra:Math.max(0,trab-480)
+
+};
+
+}
+
+let lista=getLista();
+
+if(editandoIndex!==null){
+
+lista[editandoIndex]=registro;
+
+editandoIndex=null;
+
+}else{
+
+if(lista.find(i=>i.data===data))
+return alert('Já existe esse dia');
+
+lista.push(registro);
+
+}
+
+salvarLista(lista);
+
+document.getElementById('resultado').innerHTML=
+`⏱ ${formatar(trab)} | 🔥 ${formatar(registro.extra)}`;
+
+limparCampos();
+
+carregar();
+
 }
 
 function carregar(){
- let lista=getLista().sort((a,b)=>a.data.localeCompare(b.data));
- tabela.innerHTML='';
 
- let filtroMes=document.getElementById('filtroMes')?.value;
- let filtroAno=document.getElementById('filtroAno')?.value;
+let lista=getLista()
+.sort((a,b)=>a.data.localeCompare(b.data));
 
- let total=0;
+tabela.innerHTML='';
 
- lista.forEach((item,index)=>{
-   let [ano,mes]=item.data.split('-');
+let filtroMes=document.getElementById('filtroMes')?.value;
+let filtroAno=document.getElementById('filtroAno')?.value;
 
-   if(filtroAno && ano!==filtroAno) return;
-   if(filtroMes && mes!==filtroMes) return;
+let total=0;
 
-   total+=item.extra;
+lista.forEach((item,indexOriginal)=>{
 
-   tabela.innerHTML+=`
-   <tr>
-   <td>${diaSemana(item.data)}</td>
-   <td>${formatarData(item.data)}</td>
-   <td>${formatar(item.trabalhado)}</td>
-   <td>${formatar(item.extra)}</td>
-   <td>
-   <button class='small-btn edit' onclick='editar(${index})'>Editar</button>
-   <button class='small-btn delete' onclick='excluir(${index})'>Excluir</button>
-   </td>
-   </tr>`;
- });
+let [ano,mes]=item.data.split('-');
 
- totalEl('total',`🔥 Total: <b>${formatar(total)}</b>`);
+if(filtroAno && ano!==filtroAno)
+return;
+
+if(filtroMes && mes!==filtroMes)
+return;
+
+total+=item.extra;
+
+tabela.innerHTML+=`
+
+<tr>
+
+<td>${diaSemana(item.data)}</td>
+
+<td>${formatarData(item.data)}</td>
+
+<td>${formatar(item.trabalhado)}</td>
+
+<td>${formatar(item.extra)}</td>
+
+<td>
+
+<button
+class='small-btn edit'
+onclick='editar(${indexOriginal})'>
+
+Editar
+
+</button>
+
+<button
+class='small-btn delete'
+onclick='excluir(${indexOriginal})'>
+
+Excluir
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+totalEl(
+'total',
+`🔥 Total acumulado: <b>${formatar(total)}</b>`
+);
+
 }
 
 function editar(i){
- let item=getLista()[i];
- data.value=item.data;
- entrada.value=item.entrada;
- saidaAlmoco.value=item.sAlmoco;
- voltaAlmoco.value=item.vAlmoco;
- saidaFinal.value=item.saida;
- editandoIndex=i;
+
+let item=getLista()[i];
+
+data.value=item.data;
+entrada.value=item.entrada;
+saidaFinal.value=item.saida;
+
+tipoDia.value=item.tipo || 'normal';
+
+alternarTipoDia();
+
+if(item.tipo!=='sabado'){
+
+saidaAlmoco.value=item.sAlmoco;
+voltaAlmoco.value=item.vAlmoco;
+
+}
+
+editandoIndex=i;
+
 }
 
 function excluir(i){
- if(!confirm('Excluir registro?')) return;
- let lista=getLista();
- lista.splice(i,1);
- salvarLista(lista);
- carregar();
+
+if(!confirm('Excluir registro?'))
+return;
+
+let lista=getLista();
+
+lista.splice(i,1);
+
+salvarLista(lista);
+
+carregar();
+
 }
 
 function exportar(){
- let lista=getLista();
- let csv='Dia;Data;Trabalhado;Extra\n';
- lista.forEach(i=>csv+=`${diaSemana(i.data)};${formatarData(i.data)};${formatar(i.trabalhado)};${formatar(i.extra)}\n`);
- let blob=new Blob([csv],{type:'text/csv'});
- let a=document.createElement('a');
- a.href=URL.createObjectURL(blob);
- a.download='banco_horas.csv';
- a.click();
+
+let lista=getLista();
+
+let csv='Dia;Data;Trabalhado;Extra\n';
+
+lista.forEach(i=>{
+
+csv+=
+`${diaSemana(i.data)};`
++
+`${formatarData(i.data)};`
++
+`${formatar(i.trabalhado)};`
++
+`${formatar(i.extra)}\n`;
+
+});
+
+let blob=new Blob([csv],{
+type:'text/csv'
+});
+
+let a=document.createElement('a');
+
+a.href=URL.createObjectURL(blob);
+
+a.download='banco_horas.csv';
+
+a.click();
+
 }
 
 function limparTudo(){
- if(confirm('Apagar tudo?')){
-   localStorage.removeItem('horas_'+usuario);
-   carregar();
- }
+
+if(confirm('Apagar tudo?')){
+
+localStorage.removeItem('horas_'+usuario);
+
+carregar();
+
+}
+
 }
 
 function limparFiltro(){
- filtroAno.value='';
- filtroMes.value='';
- carregar();
+
+filtroAno.value='';
+filtroMes.value='';
+
+carregar();
+
 }
 
-function getLista(){return JSON.parse(localStorage.getItem('horas_'+usuario))||[]}
-function salvarLista(l){localStorage.setItem('horas_'+usuario,JSON.stringify(l))}
-function dataEl(id){return document.getElementById(id).value}
-function totalEl(id,html){document.getElementById(id).innerHTML=html}
-function limparCampos(){['data','entrada','saidaAlmoco','voltaAlmoco','saidaFinal'].forEach(i=>document.getElementById(i).value='')}
+function getLista(){
 
-if(!usuario) loginTela(); else sistema();
+return JSON.parse(
+localStorage.getItem('horas_'+usuario)
+)||[];
+
+}
+
+function salvarLista(l){
+
+localStorage.setItem(
+'horas_'+usuario,
+JSON.stringify(l)
+);
+
+}
+
+function dataEl(id){
+
+return document.getElementById(id).value;
+
+}
+
+function totalEl(id,html){
+
+document.getElementById(id).innerHTML=html;
+
+}
+
+function limparCampos(){
+
+[
+'data',
+'entrada',
+'saidaAlmoco',
+'voltaAlmoco',
+'saidaFinal'
+].forEach(i=>{
+
+let el=document.getElementById(i);
+
+if(el) el.value='';
+
+});
+
+}
+
+if(!usuario){
+
+loginTela();
+
+}else{
+
+sistema();
+
+}
+
 </script>
+
 </body>
 </html>
